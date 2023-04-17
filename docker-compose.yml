@@ -1,0 +1,79 @@
+version: "3.9"
+
+services:
+
+  influxdb:
+    image: influxdb:latest
+    container_name: "influxdb"
+    restart: always
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=2005869
+      - DOCKER_INFLUXDB_INIT_PASSWORD=e28849f30406c938c455a561d3951cccb49ce8a5dbdd1d37e6f42f8ab3d6b8a7
+      - DOCKER_INFLUXDB_INIT_ORG=2005869org
+      - DOCKER_INFLUXDB_INIT_BUCKET=home
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=90ac814671cc91e32011546d4d1270070ee1a1a68a062f0392abb5ae12785129
+# 004 / 305
+
+    networks:
+      - iot-home
+
+    ports:
+      - 8086:8086
+      
+    volumes:
+      - ./data/influxdb:/var/lib/influxdb2
+
+  telegraf:
+    image: telegraf:latest
+    container_name: "telegraf"
+    restart: always
+
+    networks:
+      - iot-home
+
+    ports:
+      - 8125:8125
+
+    volumes:
+      # Configuration
+      - ./config/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+
+    depends_on:
+      - influxdb
+    links:
+      - influxdb
+
+    environment:
+      - DOCKER_INFLUXDB_INIT_ORG=2005869org
+      - DOCKER_INFLUXDB_INIT_BUCKET=home
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=90ac814671cc91e32011546d4d1270070ee1a1a68a062f0392abb5ae12785129
+      - INFLUX_TOKEN=GtfSMeOvtRI5X2Q5ShZJosTB3_LVBOvHMqv26i5ynw6OGKgv57OOYRGxcgKLX6u-tBKcAa7rrTSboJtyoN3uDA==
+# 305
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    restart: always
+    container_name: "mosquitto"
+    depends_on:
+      - telegraf
+    networks:
+      - iot-home
+
+    ports:
+      - 1883:1883
+      - 9001:9001
+
+    volumes:
+      # Configuration
+      - ./config/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./config/mosquitto/mosquitto.passwd:/mosquitto/config/mosquitto.passwd:ro
+
+      # Data Storage
+      - ./data/mosquitto/data:/mosquitto/data
+
+      # Log Storage
+      - ./data/mosquitto/log:/mosquitto/log
+
+networks:
+  iot-home:

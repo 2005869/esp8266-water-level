@@ -81,3 +81,9 @@ dkms.conf
 # Executables
 
 # End of https://www.toptal.com/developers/gitignore/api/c,c++
+
+# docker data
+data/*
+
+# secrets
+src/wifi/secrets.h
